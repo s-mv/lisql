@@ -1,6 +1,5 @@
-open Repl
+open Lisql.Repl
 
 let () =
   print_string "> ";
   repl ()
-

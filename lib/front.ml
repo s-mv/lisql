@@ -2,12 +2,27 @@ open Types
 
 (* lexer specific *)
 
-type symbol = Create | Select | Insert
+type keyword =
+  | Create
+  | Select
+  | In
+  | Insert
+  | Left
+  | Right
+  | Inner
+  | Outer
+  | Join
+  | And
+  | Or
+  | Where
 
 type token =
   | LParen
   | RParen
-  | Symbol of symbol
+  | Equals
+  | LessThan
+  | GreaterThan
+  | Keyword of keyword
     (* for now we just support integers even if number is float *)
   | Number of number
   | String of string
@@ -52,7 +67,7 @@ let lex_number (lexer : lexer) : (lexer * token) option =
   let lexer', number = consume lexer "" in
   Some (lexer', Number (float_of_string number))
 
-let lex_symbol_or_identifier (lexer : lexer) : (lexer * token) option =
+let lex_keyword_or_identifier (lexer : lexer) : (lexer * token) option =
   let rec consume lex acc =
     match peek lex with
     | Some c when ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z') ->
@@ -61,9 +76,18 @@ let lex_symbol_or_identifier (lexer : lexer) : (lexer * token) option =
   in
   let lexer', word = consume lexer "" in
   match String.lowercase_ascii word with
-  | "create" -> Some (lexer', Symbol Create)
-  | "select" -> Some (lexer', Symbol Select)
-  | "insert" -> Some (lexer', Symbol Insert)
+  | "create" -> Some (lexer', Keyword Create)
+  | "select" -> Some (lexer', Keyword Select)
+  | "in" -> Some (lexer', Keyword In)
+  | "insert" -> Some (lexer', Keyword Insert)
+  | "left" -> Some (lexer', Keyword Left)
+  | "right" -> Some (lexer', Keyword Right)
+  | "inner" -> Some (lexer', Keyword Inner)
+  | "outer" -> Some (lexer', Keyword Outer)
+  | "join" -> Some (lexer', Keyword Join)
+  | "and" -> Some (lexer', Keyword And)
+  | "or" -> Some (lexer', Keyword Or)
+  | "where" -> Some (lexer', Keyword Where)
   | _ -> Some (lexer', Identifier word)
 
 let lex_string (lexer : lexer) : (lexer * token) option =
@@ -86,11 +110,20 @@ let lex_one (lexer : lexer) : (lexer * token) option =
   | None -> None
   | Some '(' -> Some (advance lexer, LParen)
   | Some ')' -> Some (advance lexer, RParen)
+  | Some '=' -> Some (advance lexer, Equals)
+  | Some '<' -> Some (advance lexer, LessThan)
+  | Some '>' -> Some (advance lexer, GreaterThan)
   | Some c when '0' <= c && c <= '9' -> lex_number lexer
   | Some c when ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z') ->
-      lex_symbol_or_identifier lexer
+      lex_keyword_or_identifier lexer
   | Some '"' -> lex_string lexer
-  | Some other -> failwith ("Unexpected character: " ^ String.make 1 other)
+  | Some other -> failwith ("Unexpected characer: " ^ String.make 1 other)
+
+(* just a helper *)
+let rec lex_all lexer =
+  match lex_one lexer with
+  | None -> []
+  | Some (lexer', tok) -> tok :: lex_all lexer'
 
 (* parser stuff *)
 
@@ -106,3 +139,5 @@ let expect (token : token) (lexer : lexer) =
   match lex_one lexer with
   | Some (lexer', tok) when tok = token -> lexer'
   | _ -> failwith "Parsing error!"
+
+(* let parse (src : source) : option program = () *)

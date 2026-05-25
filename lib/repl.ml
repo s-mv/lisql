@@ -1,10 +1,5 @@
 open Front
 
-let rec lex_all lexer =
-  match lex_one lexer with
-  | None -> []
-  | Some (lexer', tok) -> tok :: lex_all lexer'
-
 let rec repl () =
   print_string "> ";
   flush stdout;
@@ -21,12 +16,23 @@ let rec repl () =
 and token_to_string = function
   | LParen -> "LParen"
   | RParen -> "RParen"
-  | Symbol Create -> "Symbol: Create"
-  | Symbol Select -> "Symbol: Select"
-  | Symbol Insert -> "Symbol: Insert"
+  | Keyword Create -> "Keyword: Create"
+  | Keyword Select -> "Keyword: Select"
+  | Keyword Insert -> "Keyword: Insert"
+  | Keyword In -> "Keyword: In"
+  | Keyword Left -> "Keyword: Left"
+  | Keyword Right -> "Keyword: Right"
+  | Keyword Inner -> "Keyword: Inner"
+  | Keyword Outer -> "Keyword: Outer"
+  | Keyword Join -> "Keyword: Join"
+  | Keyword And -> "Keyword: And"
+  | Keyword Or -> "Keyword: Or"
+  | Keyword Where -> "Keyword: Where"
   | Identifier s -> "Identifier: " ^ s
   | Number n -> "Number: " ^ string_of_float n
   | String s -> "String: " ^ s
+  | Equals -> "Equals"
+  | LessThan -> "LessThan"
+  | GreaterThan -> "GreaterThan"
 
 let () = repl ()
-
